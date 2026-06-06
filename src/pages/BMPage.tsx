@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import TopBar from '../components/TopBar'
 
@@ -37,7 +36,6 @@ interface Promotion {
 
 export default function BMPage() {
     const { user } = useAuth()
-    const navigate = useNavigate()
     const [dashboard, setDashboard] = useState<DashboardData | null>(null)
     const [orders, setOrders] = useState<Order[]>([])
     const [staff, setStaff] = useState<Staff[]>([])

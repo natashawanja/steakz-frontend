@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import TopBar from '../components/TopBar'
 
@@ -42,7 +41,6 @@ interface Transaction {
 
 export default function CashierPage() {
     const { user } = useAuth()
-    const navigate = useNavigate()
     const [orders, setOrders] = useState<Order[]>([])
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [totalRevenue, setTotalRevenue] = useState('0.00')
