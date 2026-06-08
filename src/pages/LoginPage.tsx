@@ -1,4 +1,4 @@
-import { useState } from 'react'
+tsximport { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
@@ -35,24 +35,77 @@ export default function LoginPage() {
     }
   }
 
-  const testAccounts = [
-    { label: 'Admin', email: 'admin@steakz.com', pw: 'Admin123!' },
-    { label: 'HQ Manager', email: 'hm@steakz.com', pw: 'HM123!' },
-
-    { label: 'BM — London', email: 'bm.london@steakz.com', pw: 'BM123!' },
-    { label: 'Chef — London', email: 'chef.london@steakz.com', pw: 'Chef123!' },
-    { label: 'Cashier — London', email: 'cashier.london@steakz.com', pw: 'Cash123!' },
-    { label: 'Waiter — London', email: 'waiter.london@steakz.com', pw: 'Wait123!' },
-
-    { label: 'BM — Leeds', email: 'bm.leeds@steakz.com', pw: 'BM123!' },
-    { label: 'Chef — Leeds', email: 'chef.leeds@steakz.com', pw: 'Chef123!' },
-    { label: 'Cashier — Leeds', email: 'cashier.leeds@steakz.com', pw: 'Cash123!' },
-    { label: 'Waiter — Leeds', email: 'waiter.leeds@steakz.com', pw: 'Wait123!' },
-
-    { label: 'BM — Liverpool', email: 'bm.liverpool@steakz.com', pw: 'BM123!' },
-    { label: 'Chef — Liverpool', email: 'chef.liverpool@steakz.com', pw: 'Chef123!' },
-    { label: 'Cashier — Liverpool', email: 'cashier.liverpool@steakz.com', pw: 'Cash123!' },
-    { label: 'Waiter — Liverpool', email: 'waiter.liverpool@steakz.com', pw: 'Wait123!' },
+  const branchGroups = [
+    {
+      label: 'Global',
+      accounts: [
+        { label: 'Admin', email: 'admin@steakz.com', pw: 'Admin123!' },
+        { label: 'HQ Manager', email: 'hm@steakz.com', pw: 'HM123!' },
+      ]
+    },
+    {
+      label: 'London',
+      accounts: [
+        { label: 'BM', email: 'bm.london@steakz.com', pw: 'BM123!' },
+        { label: 'Chef', email: 'chef.london@steakz.com', pw: 'Chef123!' },
+        { label: 'Cashier', email: 'cashier.london@steakz.com', pw: 'Cash123!' },
+        { label: 'Waiter', email: 'waiter.london@steakz.com', pw: 'Wait123!' },
+      ]
+    },
+    {
+      label: 'Manchester',
+      accounts: [
+        { label: 'BM', email: 'bm.manchester@steakz.com', pw: 'BM@Manc1' },
+        { label: 'Chef', email: 'chef.manchester@steakz.com', pw: 'Chef@Manc1' },
+        { label: 'Cashier', email: 'cashier.manchester@steakz.com', pw: 'Cash@Manc1' },
+        { label: 'Waiter', email: 'waiter.manchester@steakz.com', pw: 'Wait@Manc1' },
+      ]
+    },
+    {
+      label: 'Birmingham',
+      accounts: [
+        { label: 'BM', email: 'bm.birmingham@steakz.com', pw: 'BM@Birm1' },
+        { label: 'Chef', email: 'chef.birmingham@steakz.com', pw: 'Chef@Birm1' },
+        { label: 'Cashier', email: 'cashier.birmingham@steakz.com', pw: 'Cash@Birm1' },
+        { label: 'Waiter', email: 'waiter.birmingham@steakz.com', pw: 'Wait@Birm1' },
+      ]
+    },
+    {
+      label: 'Leeds',
+      accounts: [
+        { label: 'BM', email: 'bm.leeds@steakz.com', pw: 'BM123!' },
+        { label: 'Chef', email: 'chef.leeds@steakz.com', pw: 'Chef123!' },
+        { label: 'Cashier', email: 'cashier.leeds@steakz.com', pw: 'Cash123!' },
+        { label: 'Waiter', email: 'waiter.leeds@steakz.com', pw: 'Wait123!' },
+      ]
+    },
+    {
+      label: 'Edinburgh',
+      accounts: [
+        { label: 'BM', email: 'bm.edinburgh@steakz.com', pw: 'BM@Edin1' },
+        { label: 'Chef', email: 'chef.edinburgh@steakz.com', pw: 'Chef@Edin1' },
+        { label: 'Cashier', email: 'cashier.edinburgh@steakz.com', pw: 'Cash@Edin1' },
+        { label: 'Waiter', email: 'waiter.edinburgh@steakz.com', pw: 'Wait@Edin1' },
+      ]
+    },
+    {
+      label: 'Bristol',
+      accounts: [
+        { label: 'BM', email: 'bm.bristol@steakz.com', pw: 'BM@Bris1' },
+        { label: 'Chef', email: 'chef.bristol@steakz.com', pw: 'Chef@Bris1' },
+        { label: 'Cashier', email: 'cashier.bristol@steakz.com', pw: 'Cash@Bris1' },
+        { label: 'Waiter', email: 'waiter.bristol@steakz.com', pw: 'Wait@Bris1' },
+      ]
+    },
+    {
+      label: 'Liverpool',
+      accounts: [
+        { label: 'BM', email: 'bm.liverpool@steakz.com', pw: 'BM123!' },
+        { label: 'Chef', email: 'chef.liverpool@steakz.com', pw: 'Chef123!' },
+        { label: 'Cashier', email: 'cashier.liverpool@steakz.com', pw: 'Cash123!' },
+        { label: 'Waiter', email: 'waiter.liverpool@steakz.com', pw: 'Wait123!' },
+      ]
+    },
   ]
 
   return (
@@ -135,64 +188,25 @@ export default function LoginPage() {
           {/* Test accounts */}
           <div className="mt-6 pt-6 border-t border-gray-100">
             <p className="text-xs text-gray-400 font-medium mb-3">Test accounts</p>
-
-            {/* Global */}
-            <p className="text-xs text-gray-300 uppercase tracking-wider mb-1 px-1">Global</p>
-            <div className="space-y-1 mb-3">
-              {testAccounts.slice(0, 2).map(u => (
-                <button
-                  key={u.email}
-                  onClick={() => { setEmail(u.email); setPassword(u.pw) }}
-                  className="w-full text-left text-xs px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-500 transition"
-                >
-                  <span className="font-medium text-gray-700">{u.label}</span>
-                  {' — '}{u.email}
-                </button>
-              ))}
-            </div>
-
-            {/* London */}
-            <p className="text-xs text-gray-300 uppercase tracking-wider mb-1 px-1">London</p>
-            <div className="space-y-1 mb-3">
-              {testAccounts.slice(2, 6).map(u => (
-                <button
-                  key={u.email}
-                  onClick={() => { setEmail(u.email); setPassword(u.pw) }}
-                  className="w-full text-left text-xs px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-500 transition"
-                >
-                  <span className="font-medium text-gray-700">{u.label}</span>
-                  {' — '}{u.email}
-                </button>
-              ))}
-            </div>
-
-            {/* Leeds */}
-            <p className="text-xs text-gray-300 uppercase tracking-wider mb-1 px-1">Leeds</p>
-            <div className="space-y-1 mb-3">
-              {testAccounts.slice(6, 10).map(u => (
-                <button
-                  key={u.email}
-                  onClick={() => { setEmail(u.email); setPassword(u.pw) }}
-                  className="w-full text-left text-xs px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-500 transition"
-                >
-                  <span className="font-medium text-gray-700">{u.label}</span>
-                  {' — '}{u.email}
-                </button>
-              ))}
-            </div>
-
-            {/* Liverpool */}
-            <p className="text-xs text-gray-300 uppercase tracking-wider mb-1 px-1">Liverpool</p>
-            <div className="space-y-1">
-              {testAccounts.slice(10).map(u => (
-                <button
-                  key={u.email}
-                  onClick={() => { setEmail(u.email); setPassword(u.pw) }}
-                  className="w-full text-left text-xs px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-500 transition"
-                >
-                  <span className="font-medium text-gray-700">{u.label}</span>
-                  {' — '}{u.email}
-                </button>
+            <div className="space-y-4 max-h-64 overflow-y-auto pr-1">
+              {branchGroups.map(group => (
+                <div key={group.label}>
+                  <p className="text-xs text-gray-300 uppercase tracking-wider mb-1 px-1">
+                    {group.label}
+                  </p>
+                  <div className="space-y-1">
+                    {group.accounts.map(u => (
+                      <button
+                        key={u.email}
+                        onClick={() => { setEmail(u.email); setPassword(u.pw) }}
+                        className="w-full text-left text-xs px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-500 transition"
+                      >
+                        <span className="font-medium text-gray-700">{u.label}</span>
+                        {' — '}{u.email}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
