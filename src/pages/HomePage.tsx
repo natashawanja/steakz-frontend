@@ -21,6 +21,7 @@ interface Promotion {
   id: string
   code: string
   discount: number
+  branchId: string | null
 }
 
 export default function HomePage() {
@@ -134,30 +135,37 @@ export default function HomePage() {
       </div>
 
       {/* Promotions */}
-      {
-        promotions.length > 0 && (
-          <div id="offers" className="bg-brass text-white py-10 px-8">
-            <div className="max-w-5xl mx-auto">
-              <h3 className="font-display text-2xl font-bold mb-6 text-center">
+      {promotions.length > 0 && (
+        <div id="offers" className="bg-brass text-white py-10 px-8">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-8">
+              <p className="text-white/70 text-sm font-medium uppercase tracking-widest mb-2">
+                Limited Time
+              </p>
+              <h3 className="font-display text-3xl font-bold text-white">
                 Current Offers
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {promotions.map(p => (
-                  <div key={p.id} className="bg-white/20 rounded-xl p-5 text-center">
-                    <p className="font-bold text-3xl mb-1">{p.discount}% OFF</p>
-                    <p className="text-sm opacity-90">
-                      Use code:{' '}
-                      <span className="font-mono font-bold bg-white/20 px-2 py-0.5 rounded">
-                        {p.code}
-                      </span>
-                    </p>
-                  </div>
-                ))}
-              </div>
             </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {promotions.map(p => (
+                <div key={p.id} className="bg-white/20 rounded-xl p-5 text-center border border-white/20 hover:bg-white/30 transition">
+                  <p className="text-4xl font-bold mb-1">{p.discount}% OFF</p>
+                  <p className="text-white/70 text-xs mb-3">
+                    {p.branchId ? p.branchId.charAt(0).toUpperCase() + p.branchId.slice(1) + ' branch' : 'All branches'}
+                  </p>
+                  <div className="bg-white/20 rounded-lg px-3 py-2">
+                    <p className="text-xs text-white/70 mb-0.5">Use code</p>
+                    <p className="font-mono font-bold tracking-widest">{p.code}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-white/60 text-xs mt-6">
+              Apply promo code at the time of payment. One code per order.
+            </p>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Menu */}
       <div id="menu" className="max-w-5xl mx-auto py-20 px-8">
