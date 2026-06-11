@@ -31,14 +31,26 @@ interface AuditLog {
   user: { name: string; role: string }
 }
 
+interface Promotion {
+  id: string
+  code: string
+  discount: number
+  isActive: boolean
+  startDate: string
+  endDate: string
+  branchId: string | null
+}
+
 export default function AdminPage() {
   const { user } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
-  const [activeTab, setActiveTab] = useState<'users' | 'branches' | 'audit'>('users')
+  const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [activeTab, setActiveTab] = useState<'users' | 'branches' | 'audit' | 'promotions'>('users')
   const [showAddUser, setShowAddUser] = useState(false)
   const [showAddBranch, setShowAddBranch] = useState(false)
+  const [showAddPromo, setShowAddPromo] = useState(false)
   const [message, setMessage] = useState('')
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
@@ -48,6 +60,11 @@ export default function AdminPage() {
   const [branchName, setBranchName] = useState('')
   const [branchAddress, setBranchAddress] = useState('')
   const [branchCity, setBranchCity] = useState('')
+  const [promoCode, setPromoCode] = useState('')
+  const [promoDiscount, setPromoDiscount] = useState('')
+  const [promoStart, setPromoStart] = useState('')
+  const [promoEnd, setPromoEnd] = useState('')
+  const [promoBranchId, setPromoBranchId] = useState('')
 
   async function loadData() {
     const [u, b] = await Promise.all([
@@ -62,15 +79,21 @@ export default function AdminPage() {
     try {
       const res = await api.get('/api/admin/audit-log')
       setAuditLogs(res.data)
-    } catch {
-      console.error('Failed to load audit log')
-    }
+    } catch { console.error('Failed to load audit log') }
+  }
+
+  async function loadPromotions() {
+    try {
+      const res = await api.get('/api/public/promotions')
+      setPromotions(res.data)
+    } catch { console.error('Failed to load promotions') }
   }
 
   useEffect(() => { loadData() }, [])
 
   useEffect(() => {
     if (activeTab === 'audit') loadAuditLog()
+    if (activeTab === 'promotions') loadPromotions()
   }, [activeTab])
 
   async function createUser() {
@@ -96,6 +119,22 @@ export default function AdminPage() {
       setBranchName(''); setBranchAddress(''); setBranchCity('')
       loadData()
     } catch { setMessage('Error creating branch.') }
+  }
+
+  async function createPromotion() {
+    try {
+      await api.post('/api/admin/promotions', {
+        code: promoCode,
+        discount: Number(promoDiscount),
+        startDate: promoStart,
+        endDate: promoEnd,
+        branchId: promoBranchId || null
+      })
+      setMessage('Promotion created successfully!')
+      setShowAddPromo(false)
+      setPromoCode(''); setPromoDiscount(''); setPromoStart(''); setPromoEnd(''); setPromoBranchId('')
+      loadPromotions()
+    } catch { setMessage('Error creating promotion. Code may already exist.') }
   }
 
   async function changeRole(id: string, role: string) {
@@ -131,22 +170,16 @@ export default function AdminPage() {
         <h1 className="font-display text-xl font-bold text-brass mb-1">STEAKZ</h1>
         <p className="text-xs text-gray-400 mb-8">Admin Panel</p>
         <nav className="flex flex-col gap-2 flex-1">
-          <button
-            onClick={() => setActiveTab('users')}
-            className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'users' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}
-          >
+          <button onClick={() => setActiveTab('users')} className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'users' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}>
             👥 Users
           </button>
-          <button
-            onClick={() => setActiveTab('branches')}
-            className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'branches' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}
-          >
+          <button onClick={() => setActiveTab('branches')} className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'branches' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}>
             🏪 Branches
           </button>
-          <button
-            onClick={() => setActiveTab('audit')}
-            className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'audit' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}
-          >
+          <button onClick={() => setActiveTab('promotions')} className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'promotions' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}>
+            🎟️ Promotions
+          </button>
+          <button onClick={() => setActiveTab('audit')} className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'audit' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}>
             📋 Audit Log
           </button>
         </nav>
@@ -173,14 +206,10 @@ export default function AdminPage() {
                 <h2 className="text-2xl font-bold text-charcoal">Users</h2>
                 <p className="text-gray-400 text-sm">{users.length} total users</p>
               </div>
-              <button
-                onClick={() => setShowAddUser(!showAddUser)}
-                className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
-              >
+              <button onClick={() => setShowAddUser(!showAddUser)} className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
                 + Add User
               </button>
             </div>
-
             {showAddUser && (
               <div className="bg-white rounded-xl p-6 mb-6 border border-gray-100">
                 <h3 className="font-semibold mb-4">Create New User</h3>
@@ -202,7 +231,6 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
-
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
@@ -239,10 +267,7 @@ export default function AdminPage() {
                         {u.role === 'ADMIN' || u.role === 'HM' ? (
                           <span className="text-xs text-gray-300">Protected</span>
                         ) : (
-                          <button
-                            onClick={() => toggleUser(u.id, u.isActive)}
-                            className={'text-xs font-medium px-3 py-1 rounded-lg ' + (u.isActive ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100')}
-                          >
+                          <button onClick={() => toggleUser(u.id, u.isActive)} className={'text-xs font-medium px-3 py-1 rounded-lg ' + (u.isActive ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100')}>
                             {u.isActive ? 'Deactivate' : 'Activate'}
                           </button>
                         )}
@@ -266,7 +291,6 @@ export default function AdminPage() {
                 + Add Branch
               </button>
             </div>
-
             {showAddBranch && (
               <div className="bg-white rounded-xl p-6 mb-6 border border-gray-100">
                 <h3 className="font-semibold mb-4">Create New Branch</h3>
@@ -281,7 +305,6 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {branches.map(b => (
                 <div key={b.id} className="bg-white rounded-xl p-6 border border-gray-100">
@@ -301,6 +324,71 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'promotions' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-charcoal">Promotions</h2>
+                <p className="text-gray-400 text-sm">{promotions.length} active promotions</p>
+              </div>
+              <button onClick={() => setShowAddPromo(!showAddPromo)} className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
+                + Add Promotion
+              </button>
+            </div>
+            {showAddPromo && (
+              <div className="bg-white rounded-xl p-6 mb-6 border border-gray-100">
+                <h3 className="font-semibold mb-4">Create New Promotion</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <input placeholder="Promo code e.g. SUMMER10" value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} className="border rounded-lg px-3 py-2 text-sm" />
+                  <input placeholder="Discount % e.g. 10" type="number" value={promoDiscount} onChange={e => setPromoDiscount(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Start Date</label>
+                    <input type="date" value={promoStart} onChange={e => setPromoStart(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">End Date</label>
+                    <input type="date" value={promoEnd} onChange={e => setPromoEnd(e.target.value)} className="border rounded-lg px-3 py-2 text-sm w-full" />
+                  </div>
+                  <select value={promoBranchId} onChange={e => setPromoBranchId(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
+                    <option value="">All Branches (Global)</option>
+                    {branches.map(b => <option key={b.id} value={b.id}>{b.name} — {b.city}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button onClick={createPromotion} className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium">Create Promotion</button>
+                  <button onClick={() => setShowAddPromo(false)} className="border px-4 py-2 rounded-lg text-sm">Cancel</button>
+                </div>
+              </div>
+            )}
+            {promotions.length === 0 ? (
+              <div className="bg-white rounded-xl p-12 border border-gray-100 text-center">
+                <p className="text-4xl mb-3">🎟️</p>
+                <p className="text-gray-400">No active promotions found.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {promotions.map(p => (
+                  <div key={p.id} className="bg-white rounded-xl p-6 border border-gray-100">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="font-mono font-bold text-charcoal text-lg">{p.code}</span>
+                      <span className="bg-brass/10 text-brass text-sm font-bold px-3 py-1 rounded-full">{p.discount}% OFF</span>
+                    </div>
+                    <p className="text-sm text-gray-400 mb-1">
+                      📍 {p.branchId ? branches.find(b => b.id === p.branchId)?.city || p.branchId : 'All Branches'}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      📅 {new Date(p.startDate).toLocaleDateString('en-GB')} — {new Date(p.endDate).toLocaleDateString('en-GB')}
+                    </p>
+                    <div className="mt-3">
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">Active</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
