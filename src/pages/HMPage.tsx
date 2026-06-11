@@ -120,7 +120,23 @@ export default function HMPage() {
           <>
             {activeTab === 'overview' && data && (
               <div>
-                <h2 className="text-2xl font-bold text-charcoal mb-2">All Branches Overview</h2>
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-2xl font-bold text-charcoal">All Branches Overview</h2>
+                  <button
+                    onClick={async () => {
+                      const res = await api.get('/api/hm/report/export')
+                      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = 'steakz_report.json'
+                      a.click()
+                    }}
+                    className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
+                  >
+                    ⬇ Export Report
+                  </button>
+                </div>
                 <p className="text-gray-400 text-sm mb-8">Read-only view across all {data.branches.length} branches</p>
                 <div className="grid grid-cols-3 gap-4 mb-8">
                   <div className="bg-white rounded-xl p-6 border border-gray-100">

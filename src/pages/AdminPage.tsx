@@ -22,11 +22,21 @@ interface Branch {
   isActive: boolean
 }
 
+interface AuditLog {
+  id: string
+  action: string
+  targetId: string
+  targetType: string
+  createdAt: string
+  user: { name: string; role: string }
+}
+
 export default function AdminPage() {
   const { user } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
-  const [activeTab, setActiveTab] = useState<'users' | 'branches'>('users')
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [activeTab, setActiveTab] = useState<'users' | 'branches' | 'audit'>('users')
   const [showAddUser, setShowAddUser] = useState(false)
   const [showAddBranch, setShowAddBranch] = useState(false)
   const [message, setMessage] = useState('')
@@ -48,7 +58,20 @@ export default function AdminPage() {
     setBranches(b.data)
   }
 
+  async function loadAuditLog() {
+    try {
+      const res = await api.get('/api/admin/audit-log')
+      setAuditLogs(res.data)
+    } catch {
+      console.error('Failed to load audit log')
+    }
+  }
+
   useEffect(() => { loadData() }, [])
+
+  useEffect(() => {
+    if (activeTab === 'audit') loadAuditLog()
+  }, [activeTab])
 
   async function createUser() {
     try {
@@ -100,7 +123,6 @@ export default function AdminPage() {
     WAITER: 'bg-gray-100 text-gray-700',
   }
 
-  // Only these roles can be created or changed to
   const allowedRoles = ['BM', 'CHEF', 'CASHIER', 'WAITER']
 
   return (
@@ -120,6 +142,12 @@ export default function AdminPage() {
             className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'branches' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}
           >
             🏪 Branches
+          </button>
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={'text-left px-4 py-3 rounded-lg text-sm font-medium transition ' + (activeTab === 'audit' ? 'bg-brass text-white' : 'text-gray-300 hover:bg-white/10')}
+          >
+            📋 Audit Log
           </button>
         </nav>
         <div className="border-t border-white/10 pt-4">
@@ -157,58 +185,20 @@ export default function AdminPage() {
               <div className="bg-white rounded-xl p-6 mb-6 border border-gray-100">
                 <h3 className="font-semibold mb-4">Create New User</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <input
-                    placeholder="Full name"
-                    value={newName}
-                    onChange={e => setNewName(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  />
-                  <input
-                    placeholder="Email"
-                    value={newEmail}
-                    onChange={e => setNewEmail(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  />
-                  <input
-                    placeholder="Password"
-                    type="password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  />
-                  <select
-                    value={newRole}
-                    onChange={e => setNewRole(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  >
-                    {allowedRoles.map(r => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
+                  <input placeholder="Full name" value={newName} onChange={e => setNewName(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+                  <input placeholder="Email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+                  <input placeholder="Password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+                  <select value={newRole} onChange={e => setNewRole(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
+                    {allowedRoles.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
-                  <select
-                    value={newBranchId}
-                    onChange={e => setNewBranchId(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  >
+                  <select value={newBranchId} onChange={e => setNewBranchId(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
                     <option value="">Select a branch</option>
-                    {branches.map(b => (
-                      <option key={b.id} value={b.id}>{b.name} — {b.city}</option>
-                    ))}
+                    {branches.map(b => <option key={b.id} value={b.id}>{b.name} — {b.city}</option>)}
                   </select>
                 </div>
                 <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={createUser}
-                    className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium"
-                  >
-                    Create User
-                  </button>
-                  <button
-                    onClick={() => setShowAddUser(false)}
-                    className="border px-4 py-2 rounded-lg text-sm"
-                  >
-                    Cancel
-                  </button>
+                  <button onClick={createUser} className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium">Create User</button>
+                  <button onClick={() => setShowAddUser(false)} className="border px-4 py-2 rounded-lg text-sm">Cancel</button>
                 </div>
               </div>
             )}
@@ -232,20 +222,10 @@ export default function AdminPage() {
                       <td className="px-6 py-4 text-gray-500">{u.email}</td>
                       <td className="px-6 py-4">
                         {u.role === 'ADMIN' || u.role === 'HM' ? (
-                          // ADMIN and HM roles are shown as a badge only — cannot be changed
-                          <span className={'text-xs font-medium px-2 py-1 rounded-full ' + roleColors[u.role]}>
-                            {u.role}
-                          </span>
+                          <span className={'text-xs font-medium px-2 py-1 rounded-full ' + roleColors[u.role]}>{u.role}</span>
                         ) : (
-                          // All other roles can be changed but only within allowed roles
-                          <select
-                            value={u.role}
-                            onChange={e => changeRole(u.id, e.target.value)}
-                            className={'text-xs font-medium px-2 py-1 rounded-full border-0 ' + roleColors[u.role]}
-                          >
-                            {allowedRoles.map(r => (
-                              <option key={r} value={r}>{r}</option>
-                            ))}
+                          <select value={u.role} onChange={e => changeRole(u.id, e.target.value)} className={'text-xs font-medium px-2 py-1 rounded-full border-0 ' + roleColors[u.role]}>
+                            {allowedRoles.map(r => <option key={r} value={r}>{r}</option>)}
                           </select>
                         )}
                       </td>
@@ -256,7 +236,6 @@ export default function AdminPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {/* Prevent deactivating Admin or HM */}
                         {u.role === 'ADMIN' || u.role === 'HM' ? (
                           <span className="text-xs text-gray-300">Protected</span>
                         ) : (
@@ -283,10 +262,7 @@ export default function AdminPage() {
                 <h2 className="text-2xl font-bold text-charcoal">Branches</h2>
                 <p className="text-gray-400 text-sm">{branches.length} branches</p>
               </div>
-              <button
-                onClick={() => setShowAddBranch(!showAddBranch)}
-                className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
-              >
+              <button onClick={() => setShowAddBranch(!showAddBranch)} className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
                 + Add Branch
               </button>
             </div>
@@ -295,38 +271,13 @@ export default function AdminPage() {
               <div className="bg-white rounded-xl p-6 mb-6 border border-gray-100">
                 <h3 className="font-semibold mb-4">Create New Branch</h3>
                 <div className="grid grid-cols-3 gap-4">
-                  <input
-                    placeholder="Branch name"
-                    value={branchName}
-                    onChange={e => setBranchName(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  />
-                  <input
-                    placeholder="Address"
-                    value={branchAddress}
-                    onChange={e => setBranchAddress(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  />
-                  <input
-                    placeholder="City"
-                    value={branchCity}
-                    onChange={e => setBranchCity(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm"
-                  />
+                  <input placeholder="Branch name" value={branchName} onChange={e => setBranchName(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+                  <input placeholder="Address" value={branchAddress} onChange={e => setBranchAddress(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+                  <input placeholder="City" value={branchCity} onChange={e => setBranchCity(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
                 </div>
                 <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={createBranch}
-                    className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium"
-                  >
-                    Create Branch
-                  </button>
-                  <button
-                    onClick={() => setShowAddBranch(false)}
-                    className="border px-4 py-2 rounded-lg text-sm"
-                  >
-                    Cancel
-                  </button>
+                  <button onClick={createBranch} className="bg-brass text-white px-4 py-2 rounded-lg text-sm font-medium">Create Branch</button>
+                  <button onClick={() => setShowAddBranch(false)} className="border px-4 py-2 rounded-lg text-sm">Cancel</button>
                 </div>
               </div>
             )}
@@ -350,6 +301,52 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'audit' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-charcoal">Audit Log</h2>
+              <p className="text-gray-400 text-sm">{auditLogs.length} total entries — all system activity is recorded here</p>
+            </div>
+            {auditLogs.length === 0 ? (
+              <div className="bg-white rounded-xl p-12 border border-gray-100 text-center">
+                <p className="text-4xl mb-3">📋</p>
+                <p className="text-gray-400">No audit log entries yet.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                    <tr>
+                      <th className="text-left px-6 py-3">Action</th>
+                      <th className="text-left px-6 py-3">Target</th>
+                      <th className="text-left px-6 py-3">Performed By</th>
+                      <th className="text-left px-6 py-3">Role</th>
+                      <th className="text-left px-6 py-3">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditLogs.map(log => (
+                      <tr key={log.id} className="border-t border-gray-50 hover:bg-gray-50">
+                        <td className="px-6 py-3 font-medium text-charcoal">{log.action}</td>
+                        <td className="px-6 py-3 text-gray-500 font-mono text-xs">{log.targetType} — {log.targetId.slice(0, 8)}...</td>
+                        <td className="px-6 py-3 text-gray-600">{log.user?.name || '—'}</td>
+                        <td className="px-6 py-3">
+                          <span className={'text-xs font-medium px-2 py-1 rounded-full ' + roleColors[log.user?.role]}>
+                            {log.user?.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3 text-gray-400">
+                          {new Date(log.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>
